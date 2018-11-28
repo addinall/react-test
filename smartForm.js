@@ -4,7 +4,7 @@
 // Mark Addinall - July 2017 
 //
 // Synopsis: This is a new application for Asset-IQ Dealer Network.
-//           It replaces an existing PHP Web 1.0 type system that
+//           It replaces an existing PHP Web 1.0 type system this
 //           has seved well enough but time for a replacement.
 //
 //           The following technologies are used in this project:
@@ -30,9 +30,9 @@
 //           afforded.
 //
 //           SmartForm
-//           this is a component that handles the rendering of ALL of the forms in the
+//           this is a component this handles the rendering of ALL of the forms in the
 //           application, from now until the end of time.  The calling container IMPORTS
-//           a JSON object that is a DESCRIPTION of the form.  The 'SmartSuite'
+//           a JSON object this is a DESCRIPTION of the form.  The 'SmartSuite'
 //           of software developed in this application then looks after the rendering
 //           of CHILD JSX code.
 //
@@ -43,44 +43,60 @@
 //
 //           Dereferencing the array of objects of arrays was (and is) a headache.
 //
-//           Something I didn't think of.  Given that ATTRIBUTES (in a form, these reference
+//           Something I didn't think of.  Given this ATTRIBUTES (in a form, these reference
 //           input components of various sorts) may or may not ve visible, depending on the
 //           public visibility set (the customer may choose to ignore, ie. 'not see'
 //           a large number of the ATTRIBUTES, or, the end user may be logged in with
-//           an application ROLE that does not allow the user to view the fields.
+//           an application ROLE this does not allow the user to view the fields.
 //
-//           The dillema here is that the multiple pages are built BEFORE any of the FIELDS
+//           The dillema here is this the multiple pages are built BEFORE any of the FIELDS
 //           are addressed.  I need to think about this one for a bit....
 //
 
-import React, { Component }                     from 'react'                                ;
-import { connect }                              from 'react-redux'                          ;
-import PropTypes                                from 'prop-types';
-import { SmartRender }                          from './smartRender';
-import { Accordion, AccordionSection }          from './accordion'      ;
+import React, { Component }                     from 'react'                    ;
+import SmartRender                              from './smartRender'            ;
+import Accordion                                from './smart_accordion'        ;
+import AccordionSection                         from './smart_accordion_section';
+import Workflow                                 from './smart_workflow'         ;
+import Simple                                   from './smart_simple'           ;
 
-import 'react-widgets/dist/css/react-widgets.css';
-
-const pretend_props         = 'this.props';             // this is used as a special case in the
-const endAccordionSection   = 'endAccordionSection';    // differentiate from the start of section
-const endAccordion          = 'endAccordion';           // differentiate from the start of accordion
-
-const singleOpen            = PropTypes.bool;           // prop for an Accordion
-const openByDefault         = PropTypes.bool;           // prop for an AccordionSection
-const uniqId                = PropTypes.string;         // prop for any type of form
-
-const title                 = PropTypes.string;         // prop for any type of page
-const noFunctions           = PropTypes.number;         // number of COMPONENTS in a form PAGE
-const noFunctionsDone       = PropTypes.number;         // number of COMPONENTS TOUCHED in a form PAGE
-const validated             = PropTypes.bool;           // component passes validation
-const required              = PropTypes.bool;           // this can not be NULL
 
 //---------------------------------
 class SmartForm extends Component {
 
-// this is a form description parser and renderer.
-// it takes the description of a form in JSON format,
-// passed in as a prop.
+        // This is a form GENERATOR.
+        // It is quite novel in it's approach, as this is a HUGE SPA
+        // which contains HUGE forms all wrapped in a tortuous CONTROLLER
+        // and MODEL BI, rather than coding a few hundred thousand lines
+        // of code, we use this object for ALL forms in the system.
+        //
+        // It takes the description of a form in JSON format,
+        // passed in as a prop.
+        //      <SmartForm form="nameOfJSONInstructionsObject">
+        //
+        // The JSON for each form in the application will be
+        // stored in the database.
+        //
+        // The JSON is then PARSED to form a highly nested
+        // React Element that is presented as a child to the
+        // controlling FORM in the application.
+        //
+        // I tried for a few weeks to do this CLASS using
+        // pure JSX.  No way I could get the BABEL
+        // transpiler to do what I wanted, which is dynamically
+        // creating this form as a result of a JSON PARSER.
+        // THe nested children just WOULD NOT.
+        // Open Source community were their usual big help.
+        // ie., nada.
+        //
+        // I re-wrote it once to produce an I-CODE stack of operands
+        // and interpreted that to produce React Elements without
+        // using JSX.  Towards the end of this stage I realised that
+        // the I-CODE stack was redundant and the third attempt is
+        // this version.
+        //
+        // This class is invoked from the entire application where
+        // a form is required.
 
 
     //-----------------
@@ -89,200 +105,150 @@ class SmartForm extends Component {
         super(props);
     }
 
-    //-------------------
-    formStart(formType) {
 
-        // each page type in a single or multi page for will have it's own
-        // format that has been decreed by the PROPS required by each
-        // form initiation.
+    //--------------------
+    formFields(fieldsIn) {
 
-        let OP = {};
 
-        console.log('formStart');
-        switch(formType) {
-            case 'accordion':
-               // JSX.push(<Accordion uniqId={'addAsset'}{...this.props}singleOpen={true}>);
-                OP.component = Accordion;
-                OP.props = [uniqId, pretend_props, singleOpen];
-                OP.data = ['addAsset', null, true];
-
-                console.log('formStart = accordion');
-                console.log(OP.component);
-                break;
-            case 'workflow':
-                break;
-            case 'modal':
-                break;
-            case 'normal':
-                break;
-        }   
-        return(OP);
-    }
-
-    //-----------------
-    formEnd(formType) {
-
-        // each page type in a single or multi page for will have it's own
-        // format that has been decreed by the PROPS required by each
-        // form initiation.
-
-        let OP = {};
-
-        switch(formType) {
-            case 'accordion':
-                OP.component = Accordion;
-                break;
-            case 'workflow':
-                break;
-            case 'modal':
-                break;
-            case 'normal':
-                break;
-        }    
-        return(OP);
-    }
-
-    //-------------------
-    pageStart(pageType) {
-
-        // each page type in a single or multi page for will have it's own
-        // format that has been designed by the operations management
-        // and the CSS designers.
-
-        let OP = {};
-
-        switch(pageType) {
-            case 'accordion':
-                       //JSX.push( <AccordionSection
-                       // title=Asset Summary - Mandatories
-                       // noFunctions=12
-                       // noFunctionsDone=0
-                       // validated={true}
-                       // required={true}
-                       // openByDefault={true} > );
-
-                OP.component = AccordionSection;
-                OP.props = [title, 
-                            noFunctions, 
-                            noFunctionsDone, 
-                            validated, 
-                            required, 
-                            openByDefault];
-                OP.data = ["Asset Summary - Mandatories", 
-                            12, 0, true, true, true];
-                break;
-            case 'workflow':
-                break;
-            case 'modal':
-                break;
-            case 'normal':
-                break;
-            
+        let fieldsOut = [];                                             // ARRAY of FORM ELEMENTS to return
+        console.log("Fields In");
+        console.log(fieldsIn);
+        for (var fieldIn in fieldsIn) {                                 // array of FORM ELEMENT descriptions in JSON
+                                                                        // OK, now this get tricky...
+                                                                        // in this system ANY of the MAIN OBJECTS
+                                                                        // can have an UNLIMITED number of ATTRIBUTES.
+                                                                        // so, we need to cater for a field that contains
+                                                                        // 1..N fields.  Tofuther complicate matters,
+                                                                        // these components need to be in a sorted order,
+                                                                        // and the visibility and operability is variable
+                                                                        // based on the ROLE of the person currently logged
+                                                                        // in.
+            let field = React.createElement(SmartRender,                // go build the React Element 
+                                            fieldsIn[fieldIn],          // ah ha!  This was NULL
+                                            null);                      // lowest level, no children, data is in props     
+            fieldsOut.push(field);
         }
-        return(OP);
+        return(fieldsOut);                                              // this ARRAY is the children of each PAGE
     }
-    
-    //-----------------
-    pageEnd(pageType) {
 
-        // each page type in a single or multi page for will have it's own
-        // format that has been designed by the operations management
-        // and the CSS designers.
 
-        let OP = {};
+    //----------------------
+    pages(pagesIn, format) {
 
-        switch(pageType) {
-            case 'accordion':
-                //JSX.push(</AccordionSection>);
-                OP.component = AccordionSection;
+        // I tried to do this in JSX, but no syntax I wrestled with would
+        // allow me to access the childred when building this with the
+        // BABEL transpiler.  Same goes for the METHOD just above, items().
+        //
+        // This method returns an array of pages this are React elements
+        // this are treated as children by the smartForm.
+
+        let pagesOut = [];                                              // array of pages to build and return
+        let Section = {};                                               // Component to fire in the build
+        console.log("pagesIn");
+        console.log(pagesIn);
+        switch(format) {
+            case 'accordion': {
+                Section = AccordionSection;
                 break;
-            case 'workflow':
+            }
+            case 'workflow': {
+                Section = null;                                         // I haven't written this yet
                 break;
-            case 'modal':
+            }
+            case 'simple': {
+                Section = null;                                         // I haven't written this yet
                 break;
-            case 'normal':
-                break;
-            
-        }
-        return(OP);
-    }
-    
-    //-----------
-    parse(form) {
-
-        // this is the main form parser
-        // the DESCRIPTION of the for comes into this
-        // component as a JSON TREE
-        // this parser traverses the tree and constructs the
-        // JSX code to be rendered in the calling CONTAINER
-        // these few lines of code handle ALL of the forms,
-        // in ALL formats, in ALL of the application, from
-        // now, until the end of days.
-
-        let JSX = [];                                                       // container for the JSX to be rendered
-        let element = '';                                                   // outside field element of form
-        let pageElement = "";                                               // page elements
-        let fieldElement = "";                                              // each of the field objects in the page
-        let formFormat = '';                                                // snatch this value out of tree as we traverse
-
-        console.log(form);
-
-        for (element in form) {                                             // traverse the primary elements
-            console.log('----------------------');
-            console.log(element);
-            switch(element) {                                               // which element are we on?
-                case 'formName':                                            // we don't care about the name in here
-                    break;
-                case 'format':                                              // we DO care about the format!
-                    console.log(form.format);
-                    JSX.push(this.formStart(form.format));                  // handle the form intro JSX
-                    break;
-                case 'pages':
-                    for (pageElement in form.pages) {                       // iterate for 1..N pages
-                        JSX.push(this.pageStart(form.format));              // depending on the format, each new page gets unique JSX
-                        console.log(form.pages[pageElement]);               // debugging
-                        let pageArray = form.pages[pageElement];            // Pitman
-                        for (fieldElement in pageArray.fields) {            // iterate down the LIST
-                            console.log(fieldElement);                      // debugging
-                            let fields = pageArray.fields[fieldElement];    // Pitman again
-                            JSX.push(SmartRender(fields));                  // and process the field - this does a LOT of work as well!
-                        }
-                    JSX.push(this.pageEnd(form.format));                    // finish THIS page
-                    }
             }
         }
-        JSX.push(...this.formEnd(form.format));                             // finish off the rendering
-        console.log(JSX);                                                   // debugging
-        return(JSX);                                                        // send back the code for rendering
+
+        for (var pageIn in pagesIn) {                                   // pages, any format, any number 1..N
+                                                                        //
+                                                                        // OK, I have been distracted for a few months
+                                                                        // building VMs for the old system, building spreadsheets,
+                                                                        // writing CSS specs, designing code quizzes, 
+                                                                        // implementing bloody block chains, and now I'm
+                                                                        // back.
+                                                                        // This code works wunnerfly well for PRE DEFINED PAGES
+                                                                        // I am currently adding ATTRIBUTES to the MODELS
+                                                                        // and defining the RELATIONSHIPS that can be one to many
+                                                                        // or many to many.  Each of the MAJOR OBJECTS in
+                                                                        // this system can have an UNLIMITED number of ATTRIBUTES.
+                                                                        // this means we don't know how many pages we need until
+                                                                        // we hit a SECTION where attributes start.
+                                                                        // I need to add this logic in here.  This means changes
+                                                                        // in te JSON form description, changes in this routine,
+                                                                        // changes in the FIELDS routine, changes to the
+                                                                        // REDUX API and changes to the DATA LOAD and RETURN
+                                                                        // by the Python API.  This is where I could do with another
+                                                                        // six coders.
+                                                                        //
+                                                                        // Now, it would be easy to code
+                                                                        //
+                                                                        // do_something_to(attribute[233]);
+                                                                        //
+                                                                        // that is how the current system works.  getting away from that
+                                                                        // nonsense is why I designed smartForm and smartReport.  The USER
+                                                                        // modifies that ATTRIBUTES and all of the application code remains
+                                                                        // unchanged. However, this takes a litle thought...
+                                                                        //
+                                                                        // 1. How many FIELD do we put on a page, given that we are designing
+                                                                        //    for "mobile" first architectures AND that FIELDS are different sizes.
+                                                                        //    INPUT FIELDS take one row/line, TEXT AREAS, who knows at the moment,
+                                                                        //    collections of CHECKBOX, 1..N rows/lines.
+                                                                        //
+            let children = this.formFields(pagesIn[pageIn].fields);     // 1..N fields, we don't know beforehand 
+            let page = React.createElement( Section, 
+                                            pagesIn[pageIn].props, 
+                                            children);
+            pagesOut.push(page);
+        }
+        return(pagesOut);                                               // this ARRAY is the children of each FORM
     }
+
+
 
     //--------
     render() {
 
-        let code = this.parse(this.props.form);
-        console.log("-----------------------");
-        console.log("code from parse()");
-        console.log("-----------------------");
-        console.log(code);
+        let formIn  = this.props.form;                                  // JSON description of FORM
+        let formOut = null;                                             // contructed REACT/Javascript form
+        
+        
+        switch (formIn.format) {                                        // what type of operation is this
+            case 'accordion': {                                         // Accordion in a FORM, OK
+                let children = this.pages(formIn.pages,
+                                          formIn.format);               // build the children
+                formOut = React.createElement(Accordion,                // construct the parent with ALL nested CHILDREN after
+                                            {key: formIn.formName},     // just a unique key 
+                                            children);                  // N ACCORDION pages, N2 input fields
+                break;
+            }
+            case 'workflow': {
+                let children = this.pages(formIn.pages,                 // build the children
+                                          formIn.format);               // build the children
+                formOut = React.createElement(Workflow,                 // and create the complex sheet element
+                                            { key: formIn.formName},
+                                            children);                  // N SLIDING pages, N2 input fields
+                break;
+            }
+            case 'simple': {
+                let children = this.pages(formIn.pages,                 // build the children
+                                          formIn.format);               // build the children
+                formOut = React.createElement(Simple,
+                                            { key: formIn.formName},
+                                            children);                  // One page, N input fields
+            break;
+            }
+        }
+        
         return(
                 <div>
-                    <h2>SmartForm Parser</h2>
-                    {code.map(function(op, index) {
-                        const CodeIndex = `${op.component}`;
-                        console.log("-----------------------");
-                        console.log("op from map()");
-                        console.log("-----------------------");
-                        console.log(op);
-                        return(<div>
-                                    <CodeIndex key={index} />
-                               </div>
-                        );
-                    })}
+                    {formOut}
                 </div>
         );
     }
 }
-//-------------------------------------------------------------------------
+
 export default SmartForm;
 
 //-----------------   EOF -------------------------------------------------
